@@ -10,6 +10,7 @@ generate_project:
       - application.properties
       - Unit tests
   agent: java_code_generator
+  output_file: ./generated/java-docker-api.zip
 
 review_project:
   description: >
