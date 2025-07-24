@@ -1,0 +1,173 @@
+Here's a complete set of files for containerizing the Spring Boot service, following best practices:
+
+Dockerfile:
+```dockerfile
+# Build stage
+FROM eclipse-temurin:17-jdk-alpine AS build
+WORKDIR /workspace/app
+
+COPY mvnw .
+COPY .mvn .mvn
+COPY pom.xml .
+COPY src src
+
+RUN ./mvnw install -DskipTests
+RUN mkdir -p target/dependency && (cd target/dependency; jar -xf ../*.jar)
+
+# Run stage
+FROM eclipse-temurin:17-jre-alpine
+VOLUME /tmp
+ARG DEPENDENCY=/workspace/app/target/dependency
+COPY --from=build ${DEPENDENCY}/BOOT-INF/lib /app/lib
+COPY --from=build ${DEPENDENCY}/META-INF /app/META-INF
+COPY --from=build ${DEPENDENCY}/BOOT-INF/classes /app
+ENTRYPOINT ["java","-cp","app:app/lib/*","com.example.helloapi.HelloApiApplication"]
+
+# Security: Run as non-root user
+RUN addgroup -S spring && adduser -S spring -G spring
+USER spring:spring
+```
+
+docker-compose.yml:
+```yaml
+version: '3.8'
+services:
+  hello-api:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+```
+
+.dockerignore:
+```
+**/.classpath
+**/.dockerignore
+**/.env
+**/.git
+**/.gitignore
+**/.project
+**/.settings
+**/.toolstarget
+**/.vs
+**/.vscode
+**/*.*proj.user
+**/*.dbmdl
+**/*.jfm
+**/azds.yaml
+**/charts
+**/docker-compose*
+**/Dockerfile*
+**/node_modules
+**/npm-debug.log
+**/obj
+**/secrets.dev.yaml
+**/values.dev.yaml
+LICENSE
+README.md
+```
+
+README.md:
+```markdown
+# Hello API - Spring Boot Containerized Application
+
+This project is a simple Spring Boot REST API that exposes a `/hello` endpoint. It's containerized using Docker for easy deployment and scalability.
+
+## Prerequisites
+
+- Docker
+- Docker Compose (optional, for easy local deployment)
+
+## Building the Application
+
+To build the Docker image:
+
+```bash
+docker build -t hello-api .
+```
+
+## Running the Application
+
+### Using Docker
+
+To run the application using Docker:
+
+```bash
+docker run -p 8080:8080 hello-api
+```
+
+### Using Docker Compose
+
+To run the application using Docker Compose:
+
+```bash
+docker-compose up
+```
+
+## Accessing the API
+
+Once the application is running, you can access the API at:
+
+```
+http://localhost:8080/hello
+```
+
+## Health Check
+
+The application includes a health check endpoint at:
+
+```
+http://localhost:8080/actuator/health
+```
+
+## Building and Running Without Docker
+
+If you want to build and run the application without Docker:
+
+1. Build the project:
+   ```bash
+   ./mvnw clean package
+   ```
+
+2. Run the application:
+   ```bash
+   java -jar target/hello-api-0.0.1-SNAPSHOT.jar
+   ```
+
+## Testing
+
+To run the tests:
+
+```bash
+./mvnw test
+```
+
+## Security Considerations
+
+- The application runs as a non-root user inside the container.
+- HTTPS is not configured in this basic setup. For production, consider adding SSL/TLS.
+- The Docker image uses a minimal JRE base to reduce attack surface.
+
+## Customization
+
+- Environment variables can be adjusted in the `docker-compose.yml` file.
+- For production deployments, consider using environment-specific configuration files.
+
+## Troubleshooting
+
+If you encounter any issues, check the Docker logs:
+
+```bash
+docker logs <container_id>
+```
+
+Replace `<container_id>` with the actual container ID or name.
+```
+
+These files provide a lean, secure, and optimized setup for containerizing the Spring Boot application. The Dockerfile uses a multi-stage build to minimize the final image size. The docker-compose.yml file includes a health check and allows for easy local deployment. The .dockerignore file prevents unnecessary files from being included in the Docker context. The README.md provides clear instructions for building, running, and customizing the containerized application.
