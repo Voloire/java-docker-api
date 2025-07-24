@@ -1,0 +1,28 @@
+# src/java_docker_api/config/tasks.yaml
+generate_project:
+  description: >
+    Generate a complete Spring-Boot 3 REST API project scaffold (Java 17) that exposes
+    a simple /hello endpoint and is ready for Dockerization.
+  expected_output: >
+    A zip/tar archive or folder containing:
+      - Maven or Gradle build file
+      - src/main/java/.../HelloController.java
+      - application.properties
+      - Unit tests
+  agent: java_code_generator
+
+review_project:
+  description: >
+    Review the generated Spring-Boot project for best-practice compliance,
+    security vulnerabilities, test coverage, and code style.
+  expected_output: >
+    A concise markdown report listing any issues found and concrete fixes applied.
+  agent: code_reviewer
+
+create_docker_assets:
+  description: >
+    Provide a lean multi-stage Dockerfile, docker-compose.yml, and README
+    that allow the Spring-Boot service to be built and run inside a container.
+  expected_output: >
+    Dockerfile, docker-compose.yml, .dockerignore, and README with build/run instructions.
+  agent: docker_expert
