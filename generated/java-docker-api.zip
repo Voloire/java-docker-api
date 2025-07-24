@@ -1,0 +1,170 @@
+Here's a complete Spring Boot 3 REST API project scaffold with Java 17 that exposes a simple /hello endpoint and is ready for Dockerization:
+
+1. pom.xml (Maven build file)
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.example</groupId>
+    <artifactId>hello-api</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.1.0</version>
+    </parent>
+
+    <properties>
+        <java.version>17</java.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+```
+
+2. src/main/java/com/example/helloapi/HelloApiApplication.java
+
+```java
+package com.example.helloapi;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class HelloApiApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(HelloApiApplication.class, args);
+    }
+}
+```
+
+3. src/main/java/com/example/helloapi/HelloController.java
+
+```java
+package com.example.helloapi;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+public class HelloController {
+
+    @GetMapping("/hello")
+    public String hello() {
+        return "Hello, World!";
+    }
+}
+```
+
+4. src/main/resources/application.properties
+
+```properties
+# Server port
+server.port=8080
+
+# Logging
+logging.level.root=INFO
+logging.level.org.springframework.web=INFO
+logging.level.com.example.helloapi=DEBUG
+
+# Actuator endpoints
+management.endpoints.web.exposure.include=health,info,metrics
+```
+
+5. src/test/java/com/example/helloapi/HelloControllerTest.java
+
+```java
+package com.example.helloapi;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.test.web.servlet.MockMvc;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@WebMvcTest(HelloController.class)
+public class HelloControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Test
+    public void testHelloEndpoint() throws Exception {
+        mockMvc.perform(get("/hello"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Hello, World!"));
+    }
+}
+```
+
+6. Dockerfile
+
+```dockerfile
+# Use the official OpenJDK 17 image as the base image
+FROM openjdk:17-jdk-slim
+
+# Set the working directory in the container
+WORKDIR /app
+
+# Copy the JAR file into the container
+COPY target/hello-api-1.0-SNAPSHOT.jar app.jar
+
+# Expose the port that the application runs on
+EXPOSE 8080
+
+# Command to run the application
+CMD ["java", "-jar", "app.jar"]
+```
+
+7. .dockerignore
+
+```
+target/
+!target/hello-api-1.0-SNAPSHOT.jar
+```
+
+To build and run the Docker container:
+
+1. Build the Spring Boot application:
+   ```
+   mvn clean package
+   ```
+
+2. Build the Docker image:
+   ```
+   docker build -t hello-api .
+   ```
+
+3. Run the Docker container:
+   ```
+   docker run -p 8080:8080 hello-api
+   ```
+
+Now you have a complete Spring Boot 3 REST API project scaffold with Java 17 that exposes a simple /hello endpoint and is ready for Dockerization. The project includes a Maven build file, the main application class, a controller with a /hello endpoint, application properties, unit tests, and a Dockerfile for containerization.
